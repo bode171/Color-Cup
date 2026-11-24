@@ -1,5 +1,5 @@
 // Bei jedem Update die Versionsnummer erhöhen, damit die Handys die neue Version laden
-const CACHE = 'practice-clash-v10';
+const CACHE = 'color-cup-v12';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './airhorn.mp3'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES))); self.skipWaiting(); });
 self.addEventListener('activate', e => {

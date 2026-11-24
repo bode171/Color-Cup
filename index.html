@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<title>Practice Clash</title>
+<title>Color Cup</title>
 <meta name="theme-color" content="#1c1f23">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Practice Clash">
+<meta name="apple-mobile-web-app-title" content="Color Cup">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" href="icon-192.png">
@@ -17,7 +17,8 @@
   --bg:#1c1f23; --panel:#2a2e34; --panel2:#343940; --line:#474e57; --text:#eef1f4; --muted:#9aa3ad;
   --acc:#5cc8ff; --acc2:#2a9fe0; --accText:#06202e; --red:#e5484d; --green:#3fbf6f;
 }
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+html,body{-webkit-text-size-adjust:100%}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--text);
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   -webkit-user-select:none;user-select:none;overscroll-behavior:none}
@@ -62,6 +63,10 @@ select{appearance:none;-webkit-appearance:none;background-image:linear-gradient(
 .li{display:flex;align-items:center;gap:8px;padding:8px 4px 8px 12px;border-radius:12px;background:#22262b;margin-top:6px;font-size:17px;font-weight:600}
 .li .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .li.g{background:#0d0e10;border:1px solid #3a3f46}
+.del{width:48px;height:48px;border-radius:12px;border:1px solid #b88a00;background:linear-gradient(180deg,#ffe066,#efb400);color:#1a1300;
+  box-shadow:0 3px 0 #6b4f00,inset 0 1px 0 rgba(255,255,255,.6);display:flex;align-items:center;justify-content:center;padding:0}
+.del:active{transform:translateY(2px);box-shadow:0 1px 0 #6b4f00}
+.del svg{width:24px;height:24px}
 .x{width:40px;height:40px;border-radius:10px;border:1px solid #4d545d;background:linear-gradient(180deg,#3a4048,#2a2e34);color:var(--muted);font-size:16px;box-shadow:0 2px 0 #111}
 
 /* Kacheln */
@@ -224,7 +229,7 @@ td:first-child,th:first-child{text-align:left}
 <script>
 'use strict';
 /* ---------- Grunddaten ---------- */
-const VERSION = '1.9';
+const VERSION = '2.1';
 const TEAMS = {
   blau:  {n:'Blau',  bg:'linear-gradient(180deg,#3b82f0,#1a4fb5)', fg:'#fff', solid:'#2463d4'},
   weiss: {n:'Weiß',  bg:'linear-gradient(180deg,#ffffff,#cfd6dc)', fg:'#111', solid:'#eef1f4'},
@@ -233,6 +238,7 @@ const TEAMS = {
   rot:   {n:'Rot',   bg:'linear-gradient(180deg,#f0545a,#b8262c)', fg:'#fff', solid:'#e03a40'}
 };
 const ORDER = ['blau','weiss','gelb','grau','rot'];
+const TRASH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v6M14 11v6"/></svg>';
 const GK = {n:'Goalie', bg:'linear-gradient(180deg,#34383d,#050607)', fg:'#fff', solid:'#000'};
 // Rot ist die Zusatzfarbe: wird nur angezeigt, wenn sie benutzt wird
 const rotUsed = () => Object.values(S.teams).includes('rot') || S.rounds.some(r => [...r.f1, ...r.f2].includes('rot'));
@@ -489,7 +495,7 @@ function vPlan(){
     <div class="row"><button class="btn acc grow1" data-act="genPlan">⚡ Jeder gegen Jeden</button></div>
     <div class="row" style="margin-top:8px"><button class="btn sm grow1" data-act="addCycle">＋ 3 Runden</button><button class="btn sm grow1" data-act="addOne">＋ Extra-Spiel</button></div>
     ${S.rounds.map((r,ri) => `<div class="rd ${r.fixed?'fix':''}"><div class="hd"><span class="grow1">Runde ${ri+1} ${r.fixed ? '<span class="tag" style="background:var(--green);color:#042">✓ gewertet</span>' : r.ev.length ? '<span class="tag" style="background:#555">läuft</span>' : ''}</span>
-      <button class="x" data-act="rDel" data-r="${ri}">🗑</button></div>
+      <button class="del" data-act="rDel" data-r="${ri}" aria-label="Runde löschen">${TRASH}</button></div>
       <div class="fld"><span class="lb">Feld 1</span>${tsel(ri,'f1',0,r.f1[0])}<span class="vs">vs</span>${tsel(ri,'f1',1,r.f1[1])}</div>
       <div class="gsel"><span class="lb muted" style="font-size:11px">⚫ Goalies</span>${gsel(ri,0,r.g[0],r.f1[0])}${gsel(ri,1,r.g[1],r.f1[1])}</div>
       <div class="fld"><span class="lb">Feld 2</span>${tsel(ri,'f2',0,r.f2[0])}<span class="vs">vs</span>${tsel(ri,'f2',1,r.f2[1])}</div>
@@ -597,7 +603,7 @@ function vMehr(){
     <div class="row"><button class="btn sm grow1" data-act="exp">⬇️ Backup sichern</button><button class="btn sm grow1" data-act="imp">⬆️ Backup laden</button></div>
     <input type="file" id="impFile" accept=".json,application/json" style="display:none">
     <button class="btn sm red wide" style="margin-top:10px" data-act="resetT">Neues Turnier (Kader bleibt)</button>
-    <p class="hint">Practice Clash · Version ${VERSION}</p></div>`;
+    <p class="hint">Color Cup · Version ${VERSION}</p></div>`;
 }
 
 /* ---------- Aktionen ---------- */
@@ -654,9 +660,9 @@ const ACT = {
     ['sW','sE'].forEach(k => { if (S.settings[k] === 'eigen') S.settings[k] = 'airhorn'; }); save(); render(); },
   setA: d => { S.settings.accent = d.a; applyAccent(); save(); render(); },
   install: async () => { if (!installEvt) return; installEvt.prompt(); await installEvt.userChoice; installEvt = null; render(); },
-  exp: () => { const data = JSON.stringify({app:'eh_turnier', v:1, data:S}, null, 1), name = `practice-clash-backup-${new Date().toISOString().slice(0,10)}.json`;
+  exp: () => { const data = JSON.stringify({app:'eh_turnier', v:1, data:S}, null, 1), name = `color-cup-backup-${new Date().toISOString().slice(0,10)}.json`;
     const file = new File([data], name, {type:'application/json'});
-    if (navigator.canShare && navigator.canShare({files:[file]})) navigator.share({files:[file], title:'Practice Clash Backup'}).catch(() => {});
+    if (navigator.canShare && navigator.canShare({files:[file]})) navigator.share({files:[file], title:'Color Cup Backup'}).catch(() => {});
     else { const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = name; a.click(); } },
   imp: () => $('#impFile').click(),
   resetT: async () => { if (!await confirmBox('Neues Turnier?', '<p>Anwesenheit, Teams, Runden und Ergebnisse werden gelöscht. Der Kader bleibt.</p>', 'Zurücksetzen')) return;
@@ -692,6 +698,11 @@ document.addEventListener('change', e => { const t = e.target, d = t.dataset;
 document.addEventListener('input', e => { const d = e.target.dataset; if (!d.in) return;
   S.settings[d.in] = +e.target.value; $('#tv_' + d.in).textContent = fmt(S.settings[d.in]); $('#tInfo').textContent = planInfo(); });
 $('#modal').addEventListener('click', e => { if (e.target.id === 'modal') { /* Klick daneben schließt nicht – verhindert Fehltipps */ } });
+
+/* ---------- Zoom verhindern ---------- */
+let lastTouch = 0;
+document.addEventListener('touchend', e => { const now = Date.now(); if (now - lastTouch < 350 && !e.target.closest('input,select')) { e.preventDefault(); e.target.closest('[data-act]') && e.target.closest('[data-act]').click(); } lastTouch = now; }, {passive:false});
+['gesturestart','gesturechange','dblclick'].forEach(ev => document.addEventListener(ev, e => e.preventDefault(), {passive:false}));
 
 /* ---------- Start ---------- */
 applyAccent();
