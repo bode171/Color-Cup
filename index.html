@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Practice Clash</title>
+<meta name="theme-color" content="#1c1f23">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Practice Clash">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<style>
+:root{
+  --bg:#1c1f23; --panel:#2a2e34; --panel2:#343940; --line:#474e57; --text:#eef1f4; --muted:#9aa3ad;
+  --acc:#5cc8ff; --acc2:#2a9fe0; --accText:#06202e; --red:#e5484d; --green:#3fbf6f;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-user-select:none;user-select:none;overscroll-behavior:none}
+body{display:flex;flex-direction:column;height:100dvh;padding-top:env(safe-area-inset-top)}
+input,select,button{font:inherit;color:inherit}
+input,select{-webkit-user-select:text;user-select:text}
+
+/* Navigation */
+#nav{display:flex;gap:4px;padding:6px 6px 4px;background:linear-gradient(180deg,#24282d,#1c1f23);border-bottom:1px solid #000;box-shadow:0 2px 8px rgba(0,0,0,.5);z-index:5}
+#nav button{flex:1;min-width:0;border:0;background:transparent;border-radius:10px;padding:5px 0 4px;display:flex;flex-direction:column;align-items:center;gap:1px;color:var(--muted);font-size:10px;font-weight:600}
+#nav button span{font-size:19px;line-height:1.1}
+#nav button.on{background:linear-gradient(180deg,#3a4048,#2b3036);color:var(--acc);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 2px 0 #111}
+
+main{flex:1;overflow:auto;padding:10px 10px calc(16px + env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch}
+main.full{overflow:hidden;padding:0}
+h2{font-size:15px;margin:0 0 10px;color:var(--acc);text-transform:uppercase;letter-spacing:.06em}
+.card{background:linear-gradient(180deg,#30353c,#272b31);border:1px solid #3c424a;border-radius:16px;padding:12px;margin-bottom:12px;
+  box-shadow:0 4px 0 #15181b,0 8px 18px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.07)}
+.row{display:flex;gap:8px;align-items:center}
+.row>*{min-width:0}
+.grow1{flex:1}
+.muted{color:var(--muted);font-size:13px}
+.hint{color:var(--muted);font-size:13px;line-height:1.4;margin:6px 0 0}
+
+/* 3D Buttons */
+.btn{border:1px solid #4d545d;border-radius:14px;min-height:50px;padding:0 14px;font-weight:800;font-size:16px;
+  background:linear-gradient(180deg,#454c55,#30353c);color:var(--text);
+  box-shadow:0 4px 0 #121417,0 6px 12px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.14);transition:transform .05s}
+.btn:active,.btn.pressed{transform:translateY(3px);box-shadow:0 1px 0 #121417,0 2px 4px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.1)}
+.btn.acc{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--accText);border-color:var(--acc2)}
+.btn.red{background:linear-gradient(180deg,#f0636a,#c4363c);color:#fff;border-color:#a52a30}
+.btn.green{background:linear-gradient(180deg,#5fd88d,#2f9e59);color:#06210f;border-color:#2a8a4f}
+.btn.sm{min-height:40px;font-size:14px;padding:0 10px;border-radius:11px}
+.btn:disabled{opacity:.35}
+.btn.wide{width:100%}
+input[type=text],select{width:100%;min-height:50px;border-radius:12px;border:1px solid #4d545d;background:#191c20;padding:0 12px;font-size:17px;
+  box-shadow:inset 0 3px 6px rgba(0,0,0,.5)}
+select{appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);
+  background-position:calc(100% - 18px) 50%,calc(100% - 12px) 50%;background-size:6px 6px;background-repeat:no-repeat;padding-right:30px}
+
+/* Listen */
+.li{display:flex;align-items:center;gap:8px;padding:8px 4px 8px 12px;border-radius:12px;background:#22262b;margin-top:6px;font-size:17px;font-weight:600}
+.li .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.li.g{background:#0d0e10;border:1px solid #3a3f46}
+.x{width:40px;height:40px;border-radius:10px;border:1px solid #4d545d;background:linear-gradient(180deg,#3a4048,#2a2e34);color:var(--muted);font-size:16px;box-shadow:0 2px 0 #111}
+
+/* Kacheln */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px}
+.tile{min-height:60px;border-radius:14px;border:2px solid #4d545d;padding:6px;font-weight:800;font-size:15px;line-height:1.15;word-break:break-word;
+  background:linear-gradient(180deg,#3a4048,#2a2e34);color:var(--muted);box-shadow:0 4px 0 #121417,inset 0 1px 0 rgba(255,255,255,.1);position:relative}
+.tile:active{transform:translateY(3px);box-shadow:0 1px 0 #121417}
+.tile.on{border-color:var(--acc);color:var(--text);box-shadow:0 4px 0 #121417,0 0 12px color-mix(in srgb,var(--acc) 45%,transparent),inset 0 1px 0 rgba(255,255,255,.15)}
+.tile.on::after{content:"✓";position:absolute;top:3px;right:7px;color:var(--acc);font-size:14px}
+.tile.gk{background:linear-gradient(180deg,#24272b,#060708);color:#8a9199}
+.tile.gk.on{color:#fff}
+.tile.col::after{display:none}
+
+.brushes{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.brush[data-c=schwarz]{border-color:#555}
+.brush{min-height:62px;border-radius:14px;border:3px solid transparent;font-weight:900;font-size:14px;box-shadow:0 4px 0 #121417,inset 0 1px 0 rgba(255,255,255,.3);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.brush b{font-size:20px}
+.brush.on{border-color:var(--acc);transform:translateY(-2px);box-shadow:0 6px 0 #121417,0 0 14px color-mix(in srgb,var(--acc) 60%,transparent)}
+
+/* Zeit-Einstellung */
+.timeset{display:flex;align-items:center;gap:8px;margin:6px 0 4px}
+.timeset .val{flex:1;text-align:center;font-size:30px;font-weight:900;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;height:34px;-webkit-appearance:none;appearance:none;background:transparent}
+input[type=range]::-webkit-slider-runnable-track{height:10px;border-radius:6px;background:#15181b;box-shadow:inset 0 2px 4px rgba(0,0,0,.6)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:30px;height:30px;border-radius:50%;margin-top:-10px;background:linear-gradient(180deg,var(--acc),var(--acc2));border:2px solid #fff3;box-shadow:0 3px 0 #111}
+input[type=range]::-moz-range-track{height:10px;border-radius:6px;background:#15181b}
+input[type=range]::-moz-range-thumb{width:28px;height:28px;border-radius:50%;background:var(--acc);border:0}
+
+/* Spielplan */
+.rd{background:#22262b;border-radius:14px;padding:10px;margin-top:10px;border:1px solid #3a4048}
+.rd.fix{border-color:var(--green)}
+.rd .hd{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-weight:800}
+.fld{display:grid;grid-template-columns:52px 1fr 26px 1fr;gap:6px;align-items:center;margin-top:6px}
+.fld .lb{font-size:12px;color:var(--muted);font-weight:700}
+.fld .vs{text-align:center;color:var(--muted);font-weight:800}
+.fld select{min-height:44px;font-size:15px;font-weight:800}
+.gsel{display:grid;grid-template-columns:52px 1fr 1fr;gap:6px;margin-top:6px;align-items:center}
+.gsel select{min-height:40px;font-size:14px;background-color:#0b0c0e}
+.tag{display:inline-block;padding:2px 8px;border-radius:8px;font-size:12px;font-weight:800}
+
+/* Scoreboard */
+.sb{display:flex;flex-direction:column;height:100%}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:8px 8px 4px;scrollbar-width:none;flex:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:none;min-height:42px;padding:0 14px;border-radius:12px 12px 6px 6px;border:1px solid #4d545d;font-weight:800;font-size:14px;
+  background:linear-gradient(180deg,#3a4048,#2a2e34);color:var(--muted);box-shadow:0 3px 0 #111}
+.tab.on{background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--accText);border-color:var(--acc2)}
+.tab .ok{color:var(--green);margin-left:4px}
+.tab.on .ok{color:#063}
+.clock{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:2px 12px 6px;flex:none}
+.clock .l{font-size:13px;color:var(--muted);font-weight:700;line-height:1.3}
+.clock .l b{color:var(--text);font-size:15px}
+#clk{font-size:52px;font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:.02em;text-shadow:0 3px 0 #000,0 0 18px color-mix(in srgb,var(--acc) 35%,transparent);line-height:1}
+#clk.warn{color:var(--acc)}
+#clk.over{color:var(--red)}
+.clock .r{text-align:right;font-size:12px;color:var(--muted);font-weight:700}
+.clock .r b{display:block;font-size:24px;color:var(--text);font-variant-numeric:tabular-nums}
+.bar{height:6px;border-radius:4px;background:#111;margin-top:3px;overflow:hidden}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--acc2),var(--acc));width:0}
+.flash{animation:fl .6s 3}
+@keyframes fl{50%{color:var(--acc);transform:scale(1.08)}}
+
+.rinkwrap{flex:1;min-height:0;padding:0 8px}
+.rink{height:100%;display:flex;flex-direction:column;border:4px solid #d8e1e8;border-radius:64px;overflow:hidden;position:relative;
+  background:radial-gradient(ellipse at 50% 30%,#2e3d49,#1f2a33 70%);box-shadow:0 6px 0 #0d0f11,0 10px 22px rgba(0,0,0,.6),inset 0 0 30px rgba(0,0,0,.55)}
+.half{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:space-between;position:relative;padding:4px 10px}
+.half .bl{position:absolute;left:0;right:0;height:5px;background:#2f7de0;opacity:.75}
+.half.h1 .bl{bottom:30%}
+.half.h2 .bl{top:30%}
+.half .fl{position:absolute;left:12px;font-size:11px;font-weight:900;color:#ffffff66;letter-spacing:.08em}
+.half.h1 .fl{bottom:calc(30% + 9px)}
+.half.h2 .fl{top:calc(30% + 9px)}
+.redline{height:7px;background:#e5484d;box-shadow:0 0 10px #e5484d99;flex:none;position:relative}
+.redline::after{content:"";position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-23px;border-radius:50%;border:3px solid #2f7de0aa}
+.grow{position:relative;display:flex;justify-content:center;align-items:center;height:64px;flex:none}
+.crease{position:absolute;left:50%;width:120px;margin-left:-60px;height:42px;background:#5cc8ff33;border:2px solid #e5484d}
+.crease.top{top:-4px;border-top:0;border-radius:0 0 60px 60px}
+.crease.bot{bottom:-4px;border-bottom:0;border-radius:60px 60px 0 0}
+.net{position:absolute;left:50%;width:44px;margin-left:-22px;height:9px;background:#e5484d;border-radius:3px}
+.net.top{top:-2px}.net.bot{bottom:-2px}
+.gchip{position:relative;z-index:2;min-width:150px;height:56px;border-radius:14px;border:2px solid #000;
+  background:linear-gradient(180deg,#2c3035,#050607);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  box-shadow:0 4px 0 #000,0 6px 12px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.2);padding:0 12px}
+.gchip:active{transform:translateY(3px);box-shadow:0 1px 0 #000}
+.gchip .t{font-size:17px;font-weight:900;letter-spacing:.04em}
+.gchip .t b{font-size:22px;margin-left:6px;color:var(--acc)}
+.gchip .n{font-size:12px;font-weight:700;color:#c9d0d6;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gchip .stripe{position:absolute;left:5px;top:8px;bottom:8px;width:6px;border-radius:3px}
+.gsw{position:absolute;z-index:2;right:2px;width:44px;height:44px;border-radius:12px;border:1px solid #4d545d;background:linear-gradient(180deg,#3a4048,#22262b);font-size:18px;box-shadow:0 3px 0 #000}
+.tbtns{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:4px 0;z-index:1}
+.tbtn{border-radius:18px;border:2px solid #0008;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;min-height:0;
+  box-shadow:0 6px 0 #0b0d0f,0 10px 18px rgba(0,0,0,.55),inset 0 2px 0 rgba(255,255,255,.45),inset 0 -6px 12px rgba(0,0,0,.18)}
+.tbtn:active{transform:translateY(5px);box-shadow:0 1px 0 #0b0d0f,inset 0 2px 0 rgba(255,255,255,.3)}
+.tbtn small{font-size:13px;font-weight:900;letter-spacing:.12em;opacity:.8}
+.tbtn b{font-size:19px;font-weight:900;text-transform:uppercase;margin-top:2px}
+.tbtn .sc{font-size:46px;font-weight:900;font-variant-numeric:tabular-nums;margin-top:2px}
+.tbtn.pop{animation:pop .35s}
+@keyframes pop{40%{transform:scale(1.06);filter:brightness(1.25)}}
+.locked .tbtn,.locked .gchip,.locked .gsw{pointer-events:none;filter:grayscale(.4) brightness(.75)}
+.lockbar{display:flex;align-items:center;justify-content:center;gap:10px;padding:4px 10px 0;font-weight:800;color:var(--green);font-size:14px;flex:none}
+.ctrl{display:grid;grid-template-columns:56px 1fr 1fr 1fr;gap:8px;padding:10px 8px calc(10px + env(safe-area-inset-bottom));flex:none}
+.ctrl .btn{min-height:60px;font-size:17px}
+
+/* Statistik */
+table{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+th{color:var(--muted);font-size:11px;text-transform:uppercase;font-weight:800;text-align:center;padding:4px 2px}
+td{padding:8px 2px;text-align:center;border-top:1px solid #3a4048;font-weight:700}
+td:first-child,th:first-child{text-align:left}
+.dot{display:inline-block;width:14px;height:14px;border-radius:50%;vertical-align:-2px;margin-right:6px;border:1px solid #0006}
+
+/* Einstellungen */
+.opt{display:flex;align-items:center;gap:8px;margin-top:8px}
+.opt .tile{flex:1;min-height:52px;text-align:left;padding-left:12px}
+.steps{margin:6px 0 0;padding-left:22px;line-height:1.55;font-size:15px}
+.steps li{margin-bottom:4px}
+.warnbox{background:#3a2e14;border:1px solid #806322;border-radius:12px;padding:10px;font-size:14px;line-height:1.45;margin-top:10px}
+
+/* Banner, Modal, Toast */
+#banner{display:none;align-items:center;gap:8px;padding:8px 10px;background:linear-gradient(180deg,#26445a,#1d3546);font-size:14px;font-weight:700}
+#banner.show{display:flex}
+#modal{position:fixed;inset:0;background:#000a;display:none;align-items:center;justify-content:center;padding:18px;z-index:50}
+#modal.show{display:flex}
+.mbox{width:100%;max-width:420px;max-height:90dvh;overflow:auto;background:linear-gradient(180deg,#363b43,#272b31);border:1px solid #4d545d;border-radius:20px;padding:16px;
+  box-shadow:0 10px 0 #0c0e10,0 20px 40px #000}
+.mbox h3{margin:0 0 10px;font-size:20px}
+.mbox .bt{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.res{background:#1b1e22;border-radius:12px;padding:10px;margin-top:8px;font-size:16px;font-weight:800;line-height:1.7}
+#toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#0d0f11ee;border:1px solid var(--acc);color:var(--text);
+  padding:10px 16px;border-radius:14px;font-weight:700;font-size:15px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:60;max-width:90vw;text-align:center}
+#toast.show{opacity:1}
+.empty{text-align:center;padding:30px 10px;color:var(--muted)}
+/* kleine Handys */
+.tbtn{overflow:hidden}
+@media (max-height:760px){
+  .tab{min-height:36px;font-size:13px}
+  #clk{font-size:40px}
+  .clock .r b{font-size:20px}
+  .grow{height:48px}
+  .gchip{height:42px;flex-direction:row;gap:10px;min-width:170px}
+  .gchip .t{font-size:15px}.gchip .t b{font-size:19px}
+  .gchip .n{font-size:13px;max-width:90px}
+  .gsw{width:40px;height:40px}
+  .crease{height:32px}
+  .tbtn{flex-direction:row;gap:10px}
+  .tbtn small{display:none}
+  .tbtn b{font-size:17px;margin:0}
+  .tbtn .sc{font-size:36px;margin:0}
+  .ctrl{padding-top:8px}
+  .ctrl .btn{min-height:52px;font-size:15px}
+}
+</style>
+</head>
+<body>
+<nav id="nav"></nav>
+<div id="banner"><span class="grow1">📲 Als App auf den Startbildschirm holen</span><button class="btn sm acc" data-act="goInstall">Anleitung</button><button class="x" data-act="hideBanner">✕</button></div>
+<main id="view"></main>
+<div id="modal"><div class="mbox" id="mbox"></div></div>
+<div id="toast"></div>
+
+<script>
+'use strict';
+/* ---------- Grunddaten ---------- */
+const VERSION = '1.9';
+const TEAMS = {
+  blau:  {n:'Blau',  bg:'linear-gradient(180deg,#3b82f0,#1a4fb5)', fg:'#fff', solid:'#2463d4'},
+  weiss: {n:'Weiß',  bg:'linear-gradient(180deg,#ffffff,#cfd6dc)', fg:'#111', solid:'#eef1f4'},
+  gelb:  {n:'Gelb',  bg:'linear-gradient(180deg,#ffe066,#efb400)', fg:'#111', solid:'#ffd43b'},
+  grau:  {n:'Grau',  bg:'linear-gradient(180deg,#bcc3ca,#858d95)', fg:'#111', solid:'#9da5ad'},
+  rot:   {n:'Rot',   bg:'linear-gradient(180deg,#f0545a,#b8262c)', fg:'#fff', solid:'#e03a40'}
+};
+const ORDER = ['blau','weiss','gelb','grau','rot'];
+const GK = {n:'Goalie', bg:'linear-gradient(180deg,#34383d,#050607)', fg:'#fff', solid:'#000'};
+// Rot ist die Zusatzfarbe: wird nur angezeigt, wenn sie benutzt wird
+const rotUsed = () => Object.values(S.teams).includes('rot') || S.rounds.some(r => [...r.f1, ...r.f2].includes('rot'));
+const COLS = () => ORDER.filter(c => c !== 'rot' || rotUsed());
+const ACCENTS = {
+  blau:   {n:'Hellblau', acc:'#5cc8ff', acc2:'#2a9fe0', t:'#06202e'},
+  orange: {n:'Orange-Gelb', acc:'#ffb02e', acc2:'#ef7d12', t:'#2a1600'}
+};
+const SOUNDS = {pfiff:'Schiri-Pfiff', airhorn:'Airhorn'};
+const KEY = 'eh_turnier_v1';
+
+const $ = s => document.querySelector(s);
+const uid = () => Math.random().toString(36).slice(2, 9);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = sec => { sec = Math.max(0, Math.round(sec)); return Math.floor(sec/60) + ':' + String(sec%60).padStart(2,'0'); };
+const fmt2 = sec => { sec = Math.max(0, Math.ceil(sec)); return String(Math.floor(sec/60)).padStart(2,'0') + ':' + String(sec%60).padStart(2,'0'); };
+
+function defaults(){
+  const k = {id:uid(), name:'Mein Team', players:[], goalies:[]};
+  return {kaders:[k], kaderId:k.id, present:[], presentG:[], teams:{}, rounds:[], cur:0,
+    settings:{total:360, shift:60, sW:'pfiff', sE:'airhorn', accent:'blau'},
+    timer:{run:false, t0:0, base:0, si:0}, view:'kader', hideBanner:false};
+}
+let S;
+try { S = JSON.parse(localStorage.getItem(KEY)); } catch(e) { S = null; }
+if (!S || !S.kaders) S = defaults();
+S.settings = Object.assign(defaults().settings, S.settings || {});
+['sW','sE'].forEach(k => { if (!SOUNDS[S.settings[k]] && S.settings[k] !== 'eigen') S.settings[k] = 'airhorn'; });
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e) { toast('⚠️ Speichern fehlgeschlagen'); } }
+try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch(e) {}
+
+const K = () => S.kaders.find(k => k.id === S.kaderId) || S.kaders[0];
+const player = id => K().players.find(p => p.id === id);
+const goalie = id => player(id);
+const byName = (a,b) => a.name.localeCompare(b.name, 'de');
+const presentPlayers = () => K().players.filter(p => S.present.includes(p.id)).sort(byName);
+const presentGoalies = () => presentPlayers().filter(p => S.teams[p.id] === 'schwarz');
+const goalieIds = () => presentGoalies().map(p => p.id);
+// alte Daten: separate Goalie-Liste in Spielerliste übernehmen
+S.kaders.forEach(k => { (k.goalies || []).forEach(g => { if (!k.players.some(p => p.id === g.id)) k.players.push({id:g.id, name:g.name});
+  if (k.id === S.kaderId && (S.presentG || []).includes(g.id)) { if (!S.present.includes(g.id)) S.present.push(g.id); S.teams[g.id] = 'schwarz'; } }); k.goalies = []; });
+S.presentG = [];
+const R = () => S.rounds[S.cur];
+
+/* ---------- UI-Helfer ---------- */
+let toastT;
+function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 1800); }
+function modal(html){ $('#mbox').innerHTML = html; $('#modal').classList.add('show'); }
+function closeModal(){ $('#modal').classList.remove('show'); }
+// ask: Dialog mit Buttons, gibt gewählten Wert zurück
+function ask(title, body, buttons, input){
+  return new Promise(res => {
+    modal(`<h3>${title}</h3>${body || ''}${input !== undefined ? `<input type="text" id="mIn" value="${esc(input)}" style="margin-top:8px">` : ''}
+      <div class="bt">${buttons.map((b,i) => `<button class="btn ${b.c || ''}" data-mi="${i}">${b.t}</button>`).join('')}</div>`);
+    const inp = $('#mIn'); if (inp) setTimeout(() => { inp.focus(); inp.select(); }, 50);
+    $('#mbox').onclick = e => {
+      const b = e.target.closest('[data-mi]'); if (!b) return;
+      const v = buttons[+b.dataset.mi].v; const txt = inp ? inp.value.trim() : null;
+      $('#mbox').onclick = null; closeModal(); res(inp ? (v ? txt : null) : v);
+    };
+  });
+}
+const confirmBox = (title, body, yes='Ja', cls='red') => ask(title, body, [{t:yes, c:cls, v:true}, {t:'Abbrechen', v:false}]);
+function teamStyle(c){ const t = c === 'schwarz' ? GK : TEAMS[c]; return `background:${t.bg};color:${t.fg}`; }
+function vib(ms){ try { navigator.vibrate && navigator.vibrate(ms); } catch(e) {} }
+function applyAccent(){
+  const a = ACCENTS[S.settings.accent] || ACCENTS.blau, r = document.documentElement.style;
+  r.setProperty('--acc', a.acc); r.setProperty('--acc2', a.acc2); r.setProperty('--accText', a.t);
+}
+
+/* ---------- Sounds (werden in der App erzeugt, funktionieren offline) ---------- */
+const SR = 22050, audioCache = {};
+function toWav(f){
+  let peak = 0; for (const x of f) peak = Math.max(peak, Math.abs(x));
+  const g = peak ? 0.92/peak : 1, n = f.length, buf = new ArrayBuffer(44 + n*2), v = new DataView(buf);
+  const ws = (o,s) => { for (let i=0;i<s.length;i++) v.setUint8(o+i, s.charCodeAt(i)); };
+  ws(0,'RIFF'); v.setUint32(4,36+n*2,true); ws(8,'WAVE'); ws(12,'fmt '); v.setUint32(16,16,true); v.setUint16(20,1,true); v.setUint16(22,1,true);
+  v.setUint32(24,SR,true); v.setUint32(28,SR*2,true); v.setUint16(32,2,true); v.setUint16(34,16,true); ws(36,'data'); v.setUint32(40,n*2,true);
+  for (let i=0;i<n;i++) v.setInt16(44+i*2, Math.max(-1, Math.min(1, f[i]*g)) * 32767, true);
+  return URL.createObjectURL(new Blob([buf], {type:'audio/wav'}));
+}
+function synth(id){
+  const TAU = Math.PI*2;
+  if (id === 'pfiff'){ // Trillerpfeife: kurz + lang
+    const d = 1.4, n = d*SR|0, f = new Float32Array(n); let ph = 0;
+    const blasts = [[0.02,0.34],[0.48,1.36]];
+    for (let i=0;i<n;i++){ const t = i/SR; let env = 0;
+      for (const [a,b] of blasts) if (t>=a && t<=b) env = Math.min(1,(t-a)/0.015, (b-t)/0.05);
+      const tr = Math.sin(TAU*36*t);
+      ph += TAU*(3000 + 170*tr)/SR;
+      f[i] = env * (0.72 + 0.28*tr) * (Math.sin(ph) + 0.12*Math.sin(2*ph) + 0.05*(Math.random()*2-1)); }
+    return f;
+  }
+  return new Float32Array(1);
+}
+function audio(id){
+  if (!audioCache[id]) audioCache[id] = new Audio(id === 'airhorn' ? 'airhorn.mp3' : id === 'eigen' ? customSound() : toWav(synth(id)));
+  return audioCache[id];
+}
+// eigener Sound vom Handy (wird im Speicher der App abgelegt)
+const SKEY = 'eh_turnier_sound';
+function customSound(){ try { return localStorage.getItem(SKEY) || ''; } catch(e) { return ''; } }
+function soundList(){ const l = {...SOUNDS}; if (customSound()) l.eigen = '🎵 Eigener Sound'; return l; }
+function play(id){ try { const a = audio(id); a.pause(); a.currentTime = 0; a.play().catch(() => {}); } catch(e) {} }
+let unlocked = false;
+function unlockAudio(skip){ // iPhone: Töne müssen einmal durch Antippen freigeschaltet werden
+  if (unlocked) return; unlocked = true;
+  Object.keys(soundList()).filter(id => id !== skip).forEach(id => { const a = audio(id); a.muted = true;
+    a.play().then(() => { a.pause(); a.currentTime = 0; a.muted = false; }).catch(() => { a.muted = false; }); });
+}
+
+/* ---------- Bildschirm anlassen ---------- */
+let wl = null;
+async function wake(){ try { if ('wakeLock' in navigator && !wl) { wl = await navigator.wakeLock.request('screen'); wl.addEventListener('release', () => wl = null); } } catch(e) {} }
+function sleep(){ try { wl && wl.release(); } catch(e) {} wl = null; }
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && S.timer.run) wake(); });
+
+/* ---------- Spielplan ---------- */
+const PAIRS = [ [['blau','grau'],['gelb','weiss']], [['blau','gelb'],['grau','weiss']], [['blau','weiss'],['gelb','grau']] ];
+function goaliesFor(r){ const G = goalieIds(); return [0,1,2,3].map(p => p < G.length ? G[(p + r) % G.length] : null); }
+function newRound(idx){ const pr = PAIRS[idx % 3]; return {id:uid(), f1:[...pr[0]], f2:[...pr[1]], g:goaliesFor(idx), ev:[], fixed:false, el:0}; }
+function addRounds(n){ for (let i=0;i<n;i++) S.rounds.push(newRound(S.rounds.length)); save(); }
+
+/* ---------- Spieluhr ---------- */
+const totalMs = () => S.settings.total*1000, shiftMs = () => S.settings.shift*1000;
+const elapsed = () => S.timer.base + (S.timer.run ? Date.now() - S.timer.t0 : 0);
+function loadRoundTimer(){ const r = R(); S.timer = {run:false, t0:0, base:r ? (r.el || 0) : 0, si:0}; S.timer.si = Math.floor(S.timer.base / shiftMs()); }
+function storeRoundTimer(){ const r = R(); if (r) r.el = elapsed(); }
+function startClock(){
+  const r = R(); if (!r) return;
+  unlockAudio(S.settings.sW);
+  if (r.fixed) return toast('Runde ist schon gewertet');
+  if (elapsed() >= totalMs()) return toast('Zeit abgelaufen – STOPP zum Werten');
+  if (S.timer.run) return;
+  S.timer.si = Math.floor(elapsed() / shiftMs());
+  S.timer.t0 = Date.now(); S.timer.run = true; save(); wake(); vib(20); play(S.settings.sW); renderCtrl();
+}
+function pauseClock(){ if (!S.timer.run) return; S.timer.base = elapsed(); S.timer.run = false; storeRoundTimer(); save(); sleep(); renderCtrl(); }
+function tick(){
+  if (S.timer.run){
+    const e = elapsed();
+    if (e >= totalMs()){
+      S.timer.base = totalMs(); S.timer.run = false; storeRoundTimer(); save(); sleep();
+      play(S.settings.sE); vib([300,100,300]);
+      if (S.view === 'spiel') render();
+      finishDialog(true); return;
+    }
+    const idx = Math.floor(e / shiftMs());
+    if (idx > S.timer.si){
+      if (idx - S.timer.si === 1){ play(S.settings.sW); vib(200); const s = $('#clk'); if (s){ s.classList.remove('flash'); void s.offsetWidth; s.classList.add('flash'); } toast('🔁 WECHSEL!'); }
+      S.timer.si = idx; storeRoundTimer(); save();
+    }
+  }
+  if (S.view === 'spiel') updateClock();
+}
+function updateClock(){
+  const c = $('#clk'); if (!c) return;
+  const e = elapsed(), rem = (totalMs() - e)/1000;
+  c.textContent = fmt2(rem);
+  c.className = rem <= 0 ? 'over' : (rem <= 10 ? 'warn' : '') + (c.classList.contains('flash') ? ' flash' : '');
+  const sm = shiftMs(), into = e % sm, srem = Math.min((sm - into)/1000, rem);
+  $('#shf').textContent = rem <= 0 ? '–' : fmt(Math.ceil(srem));
+  $('#shbar').style.width = (rem <= 0 ? 100 : into/sm*100) + '%';
+}
+async function finishDialog(timeUp){
+  const r = R(); if (!r || r.fixed) return;
+  const b = timeUp ? [{t:'✓ Ja, Ergebnis ist fix', c:'acc', v:'fix'}, {t:'Noch nicht (Tore korrigieren)', v:'no'}, {t:'Zeit zurücksetzen & weiterspielen', v:'reset'}]
+                   : [{t:'✓ Ja, Ergebnis ist fix', c:'acc', v:'fix'}, {t:'Nein, zurück zum Spiel', v:'no'}];
+  const v = await ask(timeUp ? '⏱ Zeit abgelaufen' : '⏹ Spiel stoppen?', resultHtml(r) + '<p class="hint">Soll dieses Ergebnis fest für die Statistik übernommen werden?</p>', b);
+  if (v === 'fix'){
+    r.el = elapsed(); r.fixed = true;
+    const next = S.rounds.findIndex((x,i) => i > S.cur && !x.fixed);
+    if (next >= 0) S.cur = next;
+    loadRoundTimer(); save(); toast(next >= 0 ? `✓ Gewertet – weiter mit Runde ${next+1}` : '✓ Gewertet – alle Runden gespielt');
+  } else if (v === 'reset'){ S.timer.base = 0; S.timer.si = 0; storeRoundTimer(); save(); }
+  render();
+}
+const score = (r,c) => r.ev.filter(e => e.k === 't' && e.c === c).length;
+const ggt = (r,p) => r.ev.filter(e => e.k === 'g' && e.p === p).length;
+function resultHtml(r){
+  const line = f => { const [a,b] = r[f]; return `<div><span class="dot" style="background:${TEAMS[a].solid}"></span>${TEAMS[a].n} ${score(r,a)} : ${score(r,b)} ${TEAMS[b].n}<span class="dot" style="background:${TEAMS[b].solid};margin:0 0 0 6px"></span></div>`; };
+  const gl = [0,1,2,3].map(p => { const g = goalie(r.g[p]); return g ? `<div class="muted">🥅 ${esc(g.name)}: ${ggt(r,p)} GGT</div>` : ''; }).join('');
+  return `<div class="res"><div class="muted">Feld 1</div>${line('f1')}<div class="muted" style="margin-top:4px">Feld 2</div>${line('f2')}<div style="margin-top:6px;line-height:1.5">${gl}</div></div>`;
+}
+
+/* ---------- Ansichten ---------- */
+const VIEWS = [['kader','📋','Kader'],['da','✅','Da'],['teams','🎨','Teams'],['plan','📅','Plan'],['spiel','🏒','Spiel'],['stats','📊','Statistik'],['mehr','⚙️','Mehr']];
+function render(){
+  $('#nav').innerHTML = VIEWS.map(([v,i,t]) => `<button data-act="go" data-v="${v}" class="${S.view===v?'on':''}"><span>${i}</span>${t}</button>`).join('');
+  const m = $('#view'); m.className = S.view === 'spiel' ? 'full' : '';
+  m.innerHTML = ({kader:vKader, da:vDa, teams:vTeams, plan:vPlan, spiel:vSpiel, stats:vStats, mehr:vMehr})[S.view]();
+  if (S.view === 'spiel') { updateClock(); const t = $('.tab.on'); t && t.scrollIntoView({inline:'center', block:'nearest'}); }
+  if (focusAfter){ const i = document.querySelector(`[data-form="${focusAfter}"] input`); i && i.focus(); focusAfter = null; }
+  const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  $('#banner').classList.toggle('show', !standalone && !S.hideBanner && S.view !== 'spiel' && S.view !== 'mehr');
+}
+let focusAfter = null;
+
+function vKader(){
+  const k = K();
+  const pl = [...k.players].sort(byName);
+  return `<div class="card"><h2>Kader</h2>
+    <div class="row"><select class="grow1" data-ch="kader">${S.kaders.map(x => `<option value="${x.id}" ${x.id===k.id?'selected':''}>${esc(x.name)}</option>`).join('')}</select></div>
+    <div class="row" style="margin-top:8px"><button class="btn sm grow1" data-act="kNew">＋ Neuer Kader</button><button class="btn sm grow1" data-act="kRen">✎ Umbenennen</button><button class="btn sm red" data-act="kDel">🗑</button></div></div>
+  <div class="card"><h2>Spieler (${pl.length})</h2>
+    <form class="row" data-form="addP"><input type="text" name="n" placeholder="Name eingeben …" autocomplete="off" enterkeyhint="done"><button class="btn acc" style="min-width:56px">＋</button></form>
+    ${pl.map(p => `<div class="li"><span class="nm">${esc(p.name)}</span><button class="x" data-act="pDel" data-id="${p.id}">✕</button></div>`).join('') || '<p class="hint">Noch keine Spieler. Name eintippen und ＋ drücken.</p>'}
+    <p class="hint">⚫ Goalies werden einfach als Spieler angelegt und später unter <b>Teams</b> in Schwarz eingeteilt.</p></div>
+  </div>`;
+}
+function vDa(){
+  const k = K(), pl = [...k.players].sort(byName);
+  if (!pl.length) return `<div class="empty">Erst im <b>Kader</b> Spieler anlegen.<br><br><button class="btn acc" data-act="go" data-v="kader">Zum Kader</button></div>`;
+  return `<div class="card"><div class="row"><div class="grow1"><b style="font-size:20px">${S.present.length}</b> von ${pl.length} da</div></div>
+    <div class="row" style="margin-top:8px"><button class="btn sm grow1" data-act="allDa">Alle da</button><button class="btn sm grow1" data-act="noneDa">Keiner</button></div></div>
+  <div class="card"><h2>Spieler antippen</h2><div class="grid">${pl.map(p => `<button class="tile ${S.present.includes(p.id)?'on':''}" data-act="tglP" data-id="${p.id}">${esc(p.name)}</button>`).join('')}</div></div>
+  </div>`;
+}
+let brush = 'blau';
+function vTeams(){
+  const pl = presentPlayers();
+  if (!pl.length) return `<div class="empty">Erst unter <b>Da</b> die anwesenden Kinder antippen.<br><br><button class="btn acc" data-act="go" data-v="da">Zur Anwesenheit</button></div>`;
+  const cnt = c => pl.filter(p => S.teams[p.id] === c).length, none = pl.filter(p => !S.teams[p.id]).length;
+  return `<div class="card"><h2>Farbe wählen, dann Kinder antippen</h2>
+    <div class="brushes">${ORDER.map(c => `<button class="brush ${brush===c?'on':''}" style="${teamStyle(c)}" data-act="brush" data-c="${c}">${TEAMS[c].n}<b>${cnt(c)}</b></button>`).join('')}
+    <button class="brush ${brush==='schwarz'?'on':''}" style="${teamStyle('schwarz')}" data-act="brush" data-c="schwarz">⚫ Goalie<b>${cnt('schwarz')}</b></button>
+    <button class="brush ${brush===''?'on':''}" style="background:linear-gradient(180deg,#3a4048,#2a2e34);color:#ccc" data-act="brush" data-c="">Keine<b>${none}</b></button></div>
+    ${cnt('schwarz') !== 4 ? `<p class="hint">ℹ️ Für 2 Felder braucht ihr 4 Goalies (Schwarz) – aktuell ${cnt('schwarz')}.</p>` : ''}</div>
+  <div class="card"><div class="grid">${pl.map(p => { const c = S.teams[p.id];
+    return `<button class="tile col ${c?'on':''}" style="${c ? teamStyle(c) : ''}" data-act="paint" data-id="${p.id}">${esc(p.name)}</button>`; }).join('')}</div>
+    ${none ? `<p class="hint">⚠️ ${none} Kind${none>1?'er':''} noch ohne Farbe.</p>` : '<p class="hint">✓ Alle Kinder sind eingeteilt.</p>'}
+    <button class="btn sm" style="margin-top:8px" data-act="clearTeams">Einteilung leeren</button></div>`;
+}
+function timeSet(key, label, min, max){
+  const v = S.settings[key];
+  return `<div class="muted" style="font-weight:700">${label}</div>
+    <div class="timeset"><button class="btn" data-act="tStep" data-k="${key}" data-d="-5" data-min="${min}" data-max="${max}">−5s</button>
+    <div class="val" id="tv_${key}">${fmt(v)}</div>
+    <button class="btn" data-act="tStep" data-k="${key}" data-d="5" data-min="${min}" data-max="${max}">+5s</button></div>
+    <input type="range" min="${min}" max="${max}" step="5" value="${v}" data-in="${key}">`;
+}
+function vPlan(){
+  const tsel = (ri,f,i,c) => `<select data-ch="rT" data-r="${ri}" data-f="${f}" data-i="${i}" style="${teamStyle(c)};border-color:#0006">${ORDER.map(o => `<option value="${o}" ${o===c?'selected':''}>${TEAMS[o].n}</option>`).join('')}</select>`;
+  const G = presentGoalies();
+  const gsel = (ri,p,cur,team) => `<select data-ch="rG" data-r="${ri}" data-p="${p}" style="border-left:6px solid ${TEAMS[team].solid}"><option value="">– Goalie –</option>${G.map(g => `<option value="${g.id}" ${g.id===cur?'selected':''}>${esc(g.name)}</option>`).join('')}</select>`;
+  const sizes = COLS().map(c => `<span class="tag" style="${teamStyle(c)}">${TEAMS[c].n} ${presentPlayers().filter(p => S.teams[p.id]===c).length}</span>`).join(' ');
+  return `<div class="card"><h2>Zeiten</h2>
+    ${timeSet('total','Gesamtzeit pro Spielrunde', 30, 1800)}
+    <div style="height:10px"></div>
+    ${timeSet('shift','Wechsel (Hupe) alle', 5, 300)}
+    <p class="hint" id="tInfo">${planInfo()}</p></div>
+  <div class="card"><h2>Begegnungen</h2>
+    <div class="muted" style="margin-bottom:8px">${sizes}</div>
+    <div class="row"><button class="btn acc grow1" data-act="genPlan">⚡ Jeder gegen Jeden</button></div>
+    <div class="row" style="margin-top:8px"><button class="btn sm grow1" data-act="addCycle">＋ 3 Runden</button><button class="btn sm grow1" data-act="addOne">＋ Extra-Spiel</button></div>
+    ${S.rounds.map((r,ri) => `<div class="rd ${r.fixed?'fix':''}"><div class="hd"><span class="grow1">Runde ${ri+1} ${r.fixed ? '<span class="tag" style="background:var(--green);color:#042">✓ gewertet</span>' : r.ev.length ? '<span class="tag" style="background:#555">läuft</span>' : ''}</span>
+      <button class="x" data-act="rDel" data-r="${ri}">🗑</button></div>
+      <div class="fld"><span class="lb">Feld 1</span>${tsel(ri,'f1',0,r.f1[0])}<span class="vs">vs</span>${tsel(ri,'f1',1,r.f1[1])}</div>
+      <div class="gsel"><span class="lb muted" style="font-size:11px">⚫ Goalies</span>${gsel(ri,0,r.g[0],r.f1[0])}${gsel(ri,1,r.g[1],r.f1[1])}</div>
+      <div class="fld"><span class="lb">Feld 2</span>${tsel(ri,'f2',0,r.f2[0])}<span class="vs">vs</span>${tsel(ri,'f2',1,r.f2[1])}</div>
+      <div class="gsel"><span class="lb muted" style="font-size:11px">⚫ Goalies</span>${gsel(ri,2,r.g[2],r.f2[0])}${gsel(ri,3,r.g[3],r.f2[1])}</div>
+    </div>`).join('') || '<p class="hint">Noch keine Runden. „Jeder gegen Jeden“ erstellt 3 Runden auf 2 Feldern (Goalies rotieren automatisch).</p>'}
+    <p class="hint">💡 Geht die Anzahl nicht auf: Kinder unter <b>Teams</b> der Zusatzfarbe <b>Rot</b> zuteilen und mit „＋ Extra-Spiel“ eine Runde anlegen, in der du die Teams frei wählst.</p>
+    ${S.rounds.length ? `<button class="btn acc wide" style="margin-top:12px" data-act="go" data-v="spiel">🏒 Zum Scoreboard</button>` : ''}</div>`;
+}
+function planInfo(){
+  const n = Math.max(0, Math.ceil(S.settings.total / S.settings.shift) - 1);
+  return `Pro Runde ${fmt(S.settings.total)} Min, Wechselhupe alle ${fmt(S.settings.shift)} → ${n} Wechsel, am Ende ${soundList()[S.settings.sE] || ''}.`;
+}
+function gRow(r, p, pos, team){
+  const g = goalie(r.g[p]);
+  return `<div class="grow">${pos==='top' ? '<div class="net top"></div><div class="crease top"></div>' : '<div class="net bot"></div><div class="crease bot"></div>'}
+    <button class="gchip" data-act="ggt" data-p="${p}"><span class="stripe" style="background:${TEAMS[team].solid}"></span>
+      <span class="t">GGT<b>${ggt(r,p)}</b></span><span class="n">${g ? esc(g.name) : 'Goalie wählen'}</span></button>
+    <button class="gsw" data-act="gPick" data-p="${p}">⇄</button></div>`;
+}
+function half(r, fi){
+  const f = r['f'+fi], pA = fi === 1 ? 0 : 2;
+  return `<div class="half h${fi}"><div class="bl"></div><div class="fl">FELD ${fi}</div>
+    ${gRow(r, pA, 'top', f[0])}
+    <div class="tbtns">${f.map(c => `<button class="tbtn" style="${teamStyle(c)}" data-act="goal" data-c="${c}"><small>TOR</small><b>${TEAMS[c].n}</b><span class="sc">${score(r,c)}</span></button>`).join('')}</div>
+    ${gRow(r, pA+1, 'bot', f[1])}</div>`;
+}
+function vSpiel(){
+  if (!S.rounds.length) return `<div class="empty" style="padding-top:60px">Noch kein Spielplan.<br><br><button class="btn acc" data-act="genPlanGo">⚡ Jeder gegen Jeden erstellen</button><br><br><button class="btn" data-act="go" data-v="plan">Zum Plan</button></div>`;
+  if (S.cur >= S.rounds.length) S.cur = 0;
+  const r = R();
+  return `<div class="sb">
+    <div class="tabs">${S.rounds.map((x,i) => `<button class="tab ${i===S.cur?'on':''}" data-act="tab" data-i="${i}">Runde ${i+1}${x.fixed?'<span class="ok">✓</span>':''}</button>`).join('')}</div>
+    <div class="clock"><div class="l">Runde <b>${S.cur+1}</b>/${S.rounds.length}<br>${r.fixed ? '<span style="color:var(--green)">✓ gewertet</span>' : S.timer.run ? '▶ läuft' : elapsed() > 0 ? '⏸ Pause' : 'bereit'}</div>
+      <div id="clk">00:00</div>
+      <div class="r">Wechsel in<b id="shf">–</b><div class="bar"><i id="shbar"></i></div></div></div>
+    ${r.fixed ? `<div class="lockbar">✓ Ergebnis ist fix <button class="btn sm" data-act="unlock">Entsperren</button></div>` : ''}
+    <div class="rinkwrap ${r.fixed?'locked':''}"><div class="rink">${half(r,1)}<div class="redline"></div>${half(r,2)}</div></div>
+    <div class="ctrl" id="ctrl">${ctrlHtml()}</div></div>`;
+}
+function ctrlHtml(){
+  const run = S.timer.run, fixed = R() && R().fixed;
+  return `<button class="btn" data-act="undo" ${fixed?'disabled':''} style="font-size:22px;padding:0">↶</button>
+    <button class="btn green ${run?'pressed':''}" data-act="start" ${run||fixed?'disabled':''}>▶ START</button>
+    <button class="btn" data-act="pause" ${!run?'disabled':''}>⏸ PAUSE</button>
+    <button class="btn red" data-act="stop" ${fixed?'disabled':''}>⏹ STOPP</button>`;
+}
+function renderCtrl(){ const c = $('#ctrl'); if (c) { c.innerHTML = ctrlHtml(); } if (S.view === 'spiel') { const l = $('.clock .l'); l && (l.innerHTML = `Runde <b>${S.cur+1}</b>/${S.rounds.length}<br>${S.timer.run ? '▶ läuft' : elapsed() > 0 ? '⏸ Pause' : 'bereit'}`); } }
+
+function computeStats(){
+  const T = {}; ORDER.forEach(c => T[c] = {sp:0,s:0,u:0,n:0,tf:0,ta:0,pk:0});
+  const Gs = {};
+  const gs = id => Gs[id] || (Gs[id] = {sp:0, ggt:0});
+  S.rounds.filter(r => r.fixed).forEach(r => {
+    ['f1','f2'].forEach(f => { const [a,b] = r[f], sa = score(r,a), sb = score(r,b);
+      [[a,sa,sb],[b,sb,sa]].forEach(([c,x,y]) => { const t = T[c]; t.sp++; t.tf += x; t.ta += y;
+        if (x > y){ t.s++; t.pk += 2; } else if (x === y){ t.u++; t.pk += 1; } else t.n++; }); });
+    r.g.forEach(id => { if (id) gs(id).sp++; });
+    r.ev.forEach(e => { if (e.k === 'g' && e.gid) gs(e.gid).ggt++; });
+  });
+  return {T, Gs};
+}
+function vStats(){
+  const {T, Gs} = computeStats(), fixed = S.rounds.filter(r => r.fixed);
+  const tab = COLS().sort((a,b) => T[b].pk - T[a].pk || (T[b].tf-T[b].ta) - (T[a].tf-T[a].ta) || T[b].tf - T[a].tf);
+  const gl = Object.keys(Gs).map(id => ({g:goalie(id), ...Gs[id]})).filter(x => x.g).sort((a,b) => (a.ggt/(a.sp||1)) - (b.ggt/(b.sp||1)));
+  return `<div class="card"><h2>🏆 Color Cup – Tabelle</h2>${fixed.length ? '' : '<p class="hint">Noch keine gewertete Runde. Ergebnisse zählen erst nach STOPP → „Ergebnis ist fix“.</p>'}
+    <table><tr><th>Team</th><th>Sp</th><th>S</th><th>U</th><th>N</th><th>Tore</th><th>Diff</th><th>Pkt</th></tr>
+    ${tab.map(c => { const t = T[c]; return `<tr><td><span class="dot" style="background:${TEAMS[c].solid}"></span>${TEAMS[c].n}</td><td>${t.sp}</td><td>${t.s}</td><td>${t.u}</td><td>${t.n}</td><td>${t.tf}:${t.ta}</td><td>${t.tf-t.ta>0?'+':''}${t.tf-t.ta}</td><td style="color:var(--acc);font-size:17px">${t.pk}</td></tr>`; }).join('')}</table>
+    <p class="hint">Sieg 2 Punkte, Unentschieden 1 Punkt.</p></div>
+  <div class="card"><h2>Goalies ⚫ Gegentore</h2>
+    ${gl.length ? `<table><tr><th>Goalie</th><th>Spiele</th><th>GGT</th><th>Ø pro Spiel</th></tr>${gl.map(x => `<tr><td>⚫ ${esc(x.g.name)}</td><td>${x.sp}</td><td style="font-size:17px">${x.ggt}</td><td>${x.sp ? (x.ggt/x.sp).toFixed(1).replace('.',',') : '–'}</td></tr>`).join('')}</table>` : '<p class="hint">Noch keine Daten.</p>'}</div>
+  <div class="card"><h2>Ergebnisse</h2>${fixed.length ? S.rounds.map((r,i) => r.fixed ? `<div class="muted" style="margin-top:8px;font-weight:800">Runde ${i+1}</div>${resultHtml(r)}` : '').join('') : '<p class="hint">–</p>'}</div>
+  <div class="card"><h2>Teams</h2>${COLS().map(c => { const n = presentPlayers().filter(p => S.teams[p.id]===c).map(p => esc(p.name));
+    return `<div style="margin-top:8px"><span class="tag" style="${teamStyle(c)}">${TEAMS[c].n}</span> <span class="muted">${n.join(', ') || '–'}</span></div>`; }).join('')}
+    <div style="margin-top:8px"><span class="tag" style="background:#000;color:#fff">Goalies</span> <span class="muted">${presentGoalies().map(g => esc(g.name)).join(', ') || '–'}</span></div></div>`;
+}
+let installEvt = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; if (S.view === 'mehr') render(); });
+function vMehr(){
+  const SL = soundList(), sOpt = (key) => Object.keys(SL).map(id => `<div class="opt"><button class="tile ${S.settings[key]===id?'on':''}" data-act="setS" data-k="${key}" data-s="${id}">${SL[id]}</button><button class="btn sm" data-act="prev" data-s="${id}" style="min-width:56px">▶</button></div>`).join('');
+  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  return `<div class="card"><h2>🔊 Sound beim Wechsel</h2>${sOpt('sW')}</div>
+  <div class="card"><h2>🔊 Sound bei Spielende</h2>${sOpt('sE')}<p class="hint">Tipp: Lautstärke am Handy hochdrehen (bei Android die Medien-Lautstärke).</p></div>
+  <div class="card"><h2>🎵 Eigener Sound</h2>
+    <p class="hint" style="margin:0 0 8px">Eine MP3/WAV vom Handy laden (max. 1,5 MB). Sie erscheint dann oben als „Eigener Sound“.</p>
+    <div class="row"><button class="btn sm grow1" data-act="sndLoad">📂 Sound laden</button>${customSound() ? '<button class="btn sm red" data-act="sndDel">🗑</button>' : ''}</div>
+    <input type="file" id="sndFile" accept="audio/*" style="display:none"></div>
+  <div class="card"><h2>🎨 Akzentfarbe</h2>${Object.keys(ACCENTS).map(a => `<div class="opt"><button class="tile ${S.settings.accent===a?'on':''}" data-act="setA" data-a="${a}"><span class="dot" style="background:${ACCENTS[a].acc}"></span>${ACCENTS[a].n}</button></div>`).join('')}
+    <p class="hint">Beide Farben haben sehr guten Kontrast auf dem dunklen Grau.</p></div>
+  <div class="card" id="install"><h2>📲 App installieren</h2>
+    ${standalone ? '<p class="hint">✓ Läuft bereits als App vom Startbildschirm.</p>' : ''}
+    ${installEvt ? '<button class="btn acc wide" data-act="install">📲 Jetzt installieren</button>' : ''}
+    <h3 style="margin:12px 0 4px;font-size:17px">🍎 iPhone</h3>
+    <ol class="steps"><li>Link in <b>Safari</b> öffnen</li><li>Unten auf <b>Teilen</b> tippen (Quadrat mit Pfeil ⬆️, ggf. erst „…“)</li><li><b>„Zum Home-Bildschirm“</b> wählen</li><li><b>„Hinzufügen“</b> tippen – fertig</li></ol>
+    <h3 style="margin:14px 0 4px;font-size:17px">🤖 Android</h3>
+    <ol class="steps"><li>Link in <b>Chrome</b> öffnen. Wenn er aus WhatsApp kommt: oben rechts <b>⋮ → „In Chrome öffnen“</b></li>
+      <li>Oben rechts auf <b>⋮</b> (drei Punkte) tippen</li><li><b>„App installieren“</b> oder <b>„Zum Startbildschirm hinzufügen“</b> wählen</li>
+      <li>Bestätigen. Das Symbol liegt dann auf dem Startbildschirm (manchmal nur in der App-Übersicht – dort lange drücken und auf den Startbildschirm ziehen)</li></ol>
+    <p class="hint"><b>Samsung Internet:</b> Menü ≡ → „Seite hinzufügen zu“ → „Startbildschirm“.</p>
+    <div class="warnbox">⚠️ <b>Wichtig:</b><br>• Beim ersten Öffnen muss Internet da sein – danach läuft die App komplett offline.<br>
+      • Die installierte App hat ihren <b>eigenen Speicher</b>. Kader also erst <b>nach</b> dem Installieren in der App anlegen (oder per Backup übertragen).<br>
+      • Nicht im Inkognito-/Privat-Modus nutzen, sonst ist der Kader weg.</div></div>
+  <div class="card"><h2>💾 Daten</h2>
+    <div class="row"><button class="btn sm grow1" data-act="exp">⬇️ Backup sichern</button><button class="btn sm grow1" data-act="imp">⬆️ Backup laden</button></div>
+    <input type="file" id="impFile" accept=".json,application/json" style="display:none">
+    <button class="btn sm red wide" style="margin-top:10px" data-act="resetT">Neues Turnier (Kader bleibt)</button>
+    <p class="hint">Practice Clash · Version ${VERSION}</p></div>`;
+}
+
+/* ---------- Aktionen ---------- */
+const ACT = {
+  go: d => { if (S.view === 'spiel' && d.v !== 'spiel' && S.timer.run) toast('Uhr läuft weiter ⏱'); S.view = d.v; save(); render(); window.scrollTo(0,0); $('#view').scrollTop = 0; },
+  hideBanner: () => { S.hideBanner = true; save(); render(); },
+  goInstall: () => { S.view = 'mehr'; render(); setTimeout(() => $('#install').scrollIntoView({behavior:'smooth'}), 50); },
+  kNew: async () => { const n = await ask('Neuer Kader', '', [{t:'Anlegen', c:'acc', v:true}, {t:'Abbrechen', v:false}], ''); if (!n) return;
+    const k = {id:uid(), name:n, players:[], goalies:[]}; S.kaders.push(k); switchKader(k.id); },
+  kRen: async () => { const n = await ask('Kader umbenennen', '', [{t:'Speichern', c:'acc', v:true}, {t:'Abbrechen', v:false}], K().name); if (!n) return; K().name = n; save(); render(); },
+  kDel: async () => { if (S.kaders.length < 2) return toast('Mindestens ein Kader muss bleiben');
+    if (!await confirmBox('Kader löschen?', `<p>„${esc(K().name)}“ mit allen Spielern wird gelöscht.</p>`, 'Löschen')) return;
+    S.kaders = S.kaders.filter(k => k.id !== S.kaderId); switchKader(S.kaders[0].id); },
+  pDel: async d => { const p = player(d.id); if (!await confirmBox('Spieler löschen?', `<p>${esc(p.name)}</p>`, 'Löschen')) return;
+    K().players = K().players.filter(x => x.id !== d.id); S.present = S.present.filter(x => x !== d.id); delete S.teams[d.id]; save(); render(); },
+  tglP: d => { const i = S.present.indexOf(d.id); if (i >= 0){ S.present.splice(i,1); delete S.teams[d.id]; } else S.present.push(d.id); save(); render(); },
+    allDa: () => { S.present = K().players.map(p => p.id); save(); render(); },
+  noneDa: () => { S.present = []; S.teams = {}; save(); render(); },
+  brush: d => { brush = d.c; render(); },
+  paint: d => { if (!brush || S.teams[d.id] === brush) delete S.teams[d.id]; else S.teams[d.id] = brush; vib(10); save(); render(); },
+  clearTeams: async () => { if (await confirmBox('Einteilung leeren?', '', 'Leeren')) { S.teams = {}; save(); render(); } },
+  tStep: d => { const k = d.k; S.settings[k] = Math.min(+d.max, Math.max(+d.min, S.settings[k] + +d.d)); save(); render(); },
+  genPlan: async () => { if (S.rounds.some(r => r.ev.length) && !await confirmBox('Plan neu erstellen?', '<p>Alle bisherigen Runden und Tore werden gelöscht.</p>', 'Neu erstellen')) return;
+    S.rounds = []; S.cur = 0; addRounds(3); loadRoundTimer(); save(); render(); toast('3 Runden erstellt'); },
+  genPlanGo: () => { S.rounds = []; S.cur = 0; addRounds(3); loadRoundTimer(); save(); render(); },
+  addCycle: () => { addRounds(3); render(); },
+  addOne: () => { addRounds(1); const r = S.rounds[S.rounds.length-1];
+    if (rotUsed() && ![...r.f1, ...r.f2].includes('rot')) r.f1[1] = 'rot';
+    save(); render(); toast('Extra-Spiel angelegt – Teams unten anpassen'); setTimeout(() => { const m = $('#view'); m.scrollTop = m.scrollHeight; }, 50); },
+  rDel: async d => { const i = +d.r; if (!await confirmBox(`Runde ${i+1} löschen?`, '', 'Löschen')) return;
+    if (i === S.cur && S.timer.run) pauseClock();
+    S.rounds.splice(i,1); if (S.cur >= S.rounds.length) S.cur = Math.max(0, S.rounds.length-1); else if (i < S.cur) S.cur--; loadRoundTimer(); save(); render(); },
+  tab: d => { const i = +d.i; if (i === S.cur) return; if (S.timer.run) return toast('⏸ Erst Pause oder Stopp drücken');
+    storeRoundTimer(); S.cur = i; loadRoundTimer(); save(); render(); },
+  start: startClock,
+  pause: pauseClock,
+  stop: () => { pauseClock(); finishDialog(false); },
+  goal: (d, el) => { const r = R(); r.ev.push({k:'t', c:d.c, at:Math.round(elapsed()/1000)}); save(); vib(40);
+    el.querySelector('.sc').textContent = score(r, d.c); el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); },
+  ggt: async (d, el) => { const r = R(), p = +d.p;
+    if (!r.g[p]) { await pickGoalie(p); if (!r.g[p]) return; el = document.querySelector(`.gchip[data-p="${p}"]`); }
+    r.ev.push({k:'g', p, gid:r.g[p], at:Math.round(elapsed()/1000)}); save(); vib(40);
+    el.querySelector('.t b').textContent = ggt(r,p); el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); },
+  gPick: d => pickGoalie(+d.p),
+  undo: () => { const r = R(); const e = r.ev.pop(); if (!e) return toast('Nichts zum Rückgängig machen');
+    save(); render(); toast('↶ ' + (e.k === 't' ? 'Tor ' + TEAMS[e.c].n : 'GGT ' + (goalie(e.gid)?.name || '')) + ' entfernt'); },
+  unlock: async () => { if (!await confirmBox('Runde entsperren?', '<p>Das Ergebnis wird wieder bearbeitbar und zählt erst nach erneutem STOPP.</p>', 'Entsperren', 'acc')) return;
+    R().fixed = false; save(); render(); },
+  setS: d => { S.settings[d.k] = d.s; save(); play(d.s); render(); },
+  prev: d => play(d.s),
+  sndLoad: () => $('#sndFile').click(),
+  sndDel: async () => { if (!await confirmBox('Eigenen Sound löschen?', '', 'Löschen')) return;
+    try { localStorage.removeItem(SKEY); } catch(e) {} delete audioCache.eigen;
+    ['sW','sE'].forEach(k => { if (S.settings[k] === 'eigen') S.settings[k] = 'airhorn'; }); save(); render(); },
+  setA: d => { S.settings.accent = d.a; applyAccent(); save(); render(); },
+  install: async () => { if (!installEvt) return; installEvt.prompt(); await installEvt.userChoice; installEvt = null; render(); },
+  exp: () => { const data = JSON.stringify({app:'eh_turnier', v:1, data:S}, null, 1), name = `practice-clash-backup-${new Date().toISOString().slice(0,10)}.json`;
+    const file = new File([data], name, {type:'application/json'});
+    if (navigator.canShare && navigator.canShare({files:[file]})) navigator.share({files:[file], title:'Practice Clash Backup'}).catch(() => {});
+    else { const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = name; a.click(); } },
+  imp: () => $('#impFile').click(),
+  resetT: async () => { if (!await confirmBox('Neues Turnier?', '<p>Anwesenheit, Teams, Runden und Ergebnisse werden gelöscht. Der Kader bleibt.</p>', 'Zurücksetzen')) return;
+    S.present = []; S.teams = {}; S.rounds = []; S.cur = 0; S.timer = {run:false,t0:0,base:0,si:0}; sleep(); save(); render(); toast('Neues Turnier bereit'); }
+};
+function switchKader(id){ S.kaderId = id; S.present = []; S.teams = {}; save(); render(); }
+async function pickGoalie(p){
+  const r = R(), G = presentGoalies();
+  if (!G.length) { toast('Erst unter Teams Goalies (Schwarz) einteilen'); return; }
+  const v = await ask('Goalie wählen', '<p class="hint">Steht jemand schon in einem anderen Tor, wird getauscht.</p>',
+    [...G.map(g => ({t:'⚫ ' + esc(g.name) + (r.g[p] === g.id ? ' ✓' : ''), c: r.g[p] === g.id ? 'acc' : '', v:g.id})), {t:'Abbrechen', v:null}]);
+  if (!v) return;
+  const other = r.g.indexOf(v); if (other >= 0 && other !== p) r.g[other] = r.g[p];
+  r.g[p] = v; save(); render();
+}
+
+document.addEventListener('click', e => { const b = e.target.closest('[data-act]'); if (!b || b.disabled) return; const f = ACT[b.dataset.act]; f && f(b.dataset, b); });
+document.addEventListener('submit', e => { e.preventDefault(); const f = e.target, n = f.n.value.trim(); if (!n) return;
+  K().players.push({id:uid(), name:n});
+  focusAfter = f.dataset.form; save(); render(); });
+document.addEventListener('change', e => { const t = e.target, d = t.dataset;
+  if (d.ch === 'kader') switchKader(t.value);
+  else if (d.ch === 'rT') { S.rounds[+d.r][d.f][+d.i] = t.value; save(); render(); }
+  else if (d.ch === 'rG') { const r = S.rounds[+d.r], p = +d.p, v = t.value || null; const o = v ? r.g.indexOf(v) : -1; if (o >= 0 && o !== p) r.g[o] = r.g[p]; r.g[p] = v; save(); render(); }
+  else if (d.in) save();
+  else if (t.id === 'sndFile' && t.files[0]) { const file = t.files[0]; t.value = '';
+    if (file.size > 1.5*1024*1024) return toast('⚠️ Datei zu groß (max. 1,5 MB)');
+    const fr = new FileReader(); fr.onload = () => { try { localStorage.setItem(SKEY, fr.result); delete audioCache.eigen; S.settings.sW = 'eigen'; save(); render(); play('eigen'); toast('✓ Eigener Sound geladen (für Wechsel gewählt)'); }
+      catch(err) { toast('⚠️ Sound konnte nicht gespeichert werden'); } }; fr.readAsDataURL(file); }
+  else if (t.id === 'impFile' && t.files[0]) { const fr = new FileReader(); fr.onload = () => { try { const j = JSON.parse(fr.result); if (!j.data || !j.data.kaders) throw 0;
+      S = j.data; S.timer.run = false; applyAccent(); save(); render(); toast('✓ Backup geladen'); } catch(err) { toast('⚠️ Keine gültige Backup-Datei'); } }; fr.readAsText(t.files[0]); }
+});
+document.addEventListener('input', e => { const d = e.target.dataset; if (!d.in) return;
+  S.settings[d.in] = +e.target.value; $('#tv_' + d.in).textContent = fmt(S.settings[d.in]); $('#tInfo').textContent = planInfo(); });
+$('#modal').addEventListener('click', e => { if (e.target.id === 'modal') { /* Klick daneben schließt nicht – verhindert Fehltipps */ } });
+
+/* ---------- Start ---------- */
+applyAccent();
+if (S.timer.run && elapsed() >= totalMs()) { S.timer.base = totalMs(); S.timer.run = false; }
+render();
+setInterval(tick, 250);
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>
